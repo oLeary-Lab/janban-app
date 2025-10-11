@@ -50,7 +50,7 @@ export const createProject = async (req: Request, res: Response) => {
 // "/api/projects"
 export const getAllProjects = async (req: Request, res: Response) => {
   try {
-    const projects = await Project.find({});
+    const projects = await Project.find({ users: req.userId });
     return res.status(200).json(projects);
   } catch (err) {
     console.log(err);

@@ -200,17 +200,18 @@ describe("Project Controller", () => {
   });
 
   describe("getAllProjects", () => {
-    it("should return all projects with status 200", async () => {
+    it("should return only projects where user is a member", async () => {
       const mockProjects = [
-        { projectId: "JP000001", name: "Project 1" },
-        { projectId: "JP000002", name: "Project 2" },
+        { projectId: "JP000001", name: "Project 1", users: ["user123"] },
+        { projectId: "JP000002", name: "Project 2", users: ["user123"] },
       ];
 
+      mockRequest.userId = "user123";
       (Project.find as jest.Mock).mockResolvedValue(mockProjects);
 
       await getAllProjects(mockRequest as Request, mockResponse as Response);
 
-      expect(Project.find).toHaveBeenCalledWith({});
+      expect(Project.find).toHaveBeenCalledWith({ users: "user123" });
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(responseObject.json).toHaveBeenCalledWith(mockProjects);
     });
