@@ -232,14 +232,16 @@ describe("Project Controller", () => {
   });
 
   describe("getProject", () => {
-    it("should return a project if found", async () => {
+    it("should return a project if found and user has access", async () => {
       const mockProject = {
         projectId: "JP000001",
         name: "Test Project",
         issues: [],
+        users: ["user123"],
       };
 
       mockRequest.params = { projectId: "JP000001" };
+      mockRequest.userId = "user123";
       (Project.findOne as jest.Mock).mockReturnValue({
         populate: jest.fn().mockResolvedValue(mockProject),
       });
@@ -249,6 +251,27 @@ describe("Project Controller", () => {
       expect(Project.findOne).toHaveBeenCalledWith({ projectId: "JP000001" });
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(responseObject.json).toHaveBeenCalledWith(mockProject);
+    });
+
+    it("should return 403 if user does not have access to project", async () => {
+      const mockProject = {
+        projectId: "JP000001",
+        name: "Test Project",
+        users: ["otherUser456"],
+      };
+
+      mockRequest.params = { projectId: "JP000001" };
+      mockRequest.userId = "user123";
+      (Project.findOne as jest.Mock).mockReturnValue({
+        populate: jest.fn().mockResolvedValue(mockProject),
+      });
+
+      await getProject(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+      expect(responseObject.json).toHaveBeenCalledWith({
+        message: "Access denied",
+      });
     });
 
     it("should return 404 if project not found", async () => {
@@ -283,16 +306,17 @@ describe("Project Controller", () => {
   });
 
   describe("updateProject", () => {
-    it("should update and return project if found", async () => {
+    it("should update and return project if found and user has access", async () => {
       const mockProject = {
         projectId: "JP000001",
         name: "Old Name",
         description: "Old Description",
-        lastUpdated: new Date("2023-01-01"),
+        users: ["user123"],
         save: jest.fn().mockResolvedValue(true),
       };
 
       mockRequest.params = { projectId: "JP000001" };
+      mockRequest.userId = "user123";
       mockRequest.body = {
         name: "New Name",
         description: "New Description",
@@ -308,6 +332,29 @@ describe("Project Controller", () => {
       expect(mockProject.save).toHaveBeenCalled();
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(responseObject.json).toHaveBeenCalledWith(mockProject);
+    });
+
+    it("should return 403 if user does not have access to project", async () => {
+      const mockProject = {
+        projectId: "JP000001",
+        users: ["otherUser456"],
+      };
+
+      mockRequest.params = { projectId: "JP000001" };
+      mockRequest.userId = "user123";
+      mockRequest.body = {
+        name: "New Name",
+        description: "New Description",
+      };
+
+      (Project.findOne as jest.Mock).mockResolvedValue(mockProject);
+
+      await updateProject(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+      expect(responseObject.json).toHaveBeenCalledWith({
+        message: "Access denied",
+      });
     });
 
     it("should return 404 if project not found", async () => {
@@ -350,15 +397,23 @@ describe("Project Controller", () => {
   });
 
   describe("deleteProject", () => {
-    it("should delete and return success message if project found", async () => {
-      mockRequest.params = { projectId: "JP000001" };
+    it("should delete and return success message if project found and user has access", async () => {
+      const mockProject = {
+        projectId: "JP000001",
+        users: ["user123"],
+      };
 
+      mockRequest.params = { projectId: "JP000001" };
+      mockRequest.userId = "user123";
+
+      (Project.findOne as jest.Mock).mockResolvedValue(mockProject);
       (Project.findOneAndDelete as jest.Mock).mockResolvedValue({
         projectId: "JP000001",
       });
 
       await deleteProject(mockRequest as Request, mockResponse as Response);
 
+      expect(Project.findOne).toHaveBeenCalledWith({ projectId: "JP000001" });
       expect(Project.findOneAndDelete).toHaveBeenCalledWith({
         projectId: "JP000001",
       });
@@ -368,14 +423,33 @@ describe("Project Controller", () => {
       });
     });
 
-    it("should return 404 if project not found", async () => {
-      mockRequest.params = { projectId: "JP000001" };
+    it("should return 403 if user does not have access to project", async () => {
+      const mockProject = {
+        projectId: "JP000001",
+        users: ["otherUser456"],
+      };
 
-      (Project.findOneAndDelete as jest.Mock).mockResolvedValue(null);
+      mockRequest.params = { projectId: "JP000001" };
+      mockRequest.userId = "user123";
+
+      (Project.findOne as jest.Mock).mockResolvedValue(mockProject);
 
       await deleteProject(mockRequest as Request, mockResponse as Response);
 
-      expect(Project.findOneAndDelete).toHaveBeenCalledWith({
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+      expect(responseObject.json).toHaveBeenCalledWith({
+        message: "Access denied",
+      });
+    });
+
+    it("should return 404 if project not found", async () => {
+      mockRequest.params = { projectId: "JP000001" };
+
+      (Project.findOne as jest.Mock).mockResolvedValue(null);
+
+      await deleteProject(mockRequest as Request, mockResponse as Response);
+
+      expect(Project.findOne).toHaveBeenCalledWith({
         projectId: "JP000001",
       });
       expect(mockResponse.status).toHaveBeenCalledWith(404);
@@ -387,7 +461,7 @@ describe("Project Controller", () => {
     it("should return 500 if an error occurs", async () => {
       mockRequest.params = { projectId: "JP000001" };
 
-      (Project.findOneAndDelete as jest.Mock).mockRejectedValue(
+      (Project.findOne as jest.Mock).mockRejectedValue(
         new Error("Database error")
       );
       jest.spyOn(console, "log").mockImplementation(() => {});

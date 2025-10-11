@@ -69,6 +69,15 @@ export const getProject = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
+    // Verify user has access
+    const hasAccess = project.users.some(
+      (userId) => userId.toString() === req.userId
+    );
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     return res.status(200).json(project);
   } catch (err) {
     console.log(err);
@@ -87,6 +96,15 @@ export const updateProject = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
+    // Verify user has access
+    const hasAccess = existingProject.users.some(
+      (userId) => userId.toString() === req.userId
+    );
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     existingProject.name = name;
     existingProject.description = description;
 
@@ -103,11 +121,22 @@ export const deleteProject = async (req: Request, res: Response) => {
   try {
     const { projectId } = req.params;
 
-    const result = await Project.findOneAndDelete({ projectId });
+    const project = await Project.findOne({ projectId });
 
-    if (!result) {
+    if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
+
+    // Verify user has access
+    const hasAccess = project.users.some(
+      (userId) => userId.toString() === req.userId
+    );
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    await Project.findOneAndDelete({ projectId });
 
     return res.status(200).json({ message: "Project deleted successfully" });
   } catch (err) {
