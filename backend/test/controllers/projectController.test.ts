@@ -9,10 +9,12 @@ import {
   deleteProject,
 } from "../../src/controllers/projectController";
 import Project from "../../src/models/project";
+import User from "../../src/models/user";
 
 // ==== DEPENDENCY MOCKS ====
 
 jest.mock("../../src/models/project");
+jest.mock("../../src/models/user");
 jest.mock("express-validator", () => ({
   validationResult: jest.fn(),
 }));
@@ -53,6 +55,12 @@ describe("Project Controller", () => {
     });
 
     it("should create a project and return 201 with project data", async () => {
+      const mockUser = {
+        _id: "user123",
+        projects: [],
+        save: jest.fn().mockResolvedValue(true),
+      };
+
       const mockProject = {
         _id: "project123",
         projectId: "JP000001",
@@ -68,12 +76,14 @@ describe("Project Controller", () => {
         name: "Test Project",
         description: "Test Description",
       };
+      mockRequest.userId = "user123";
 
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
       });
       (Project.find as jest.Mock).mockResolvedValue([]);
       (Project as unknown as jest.Mock).mockImplementation(() => mockProject);
+      (User.findById as jest.Mock).mockResolvedValue(mockUser);
 
       await createProject(mockRequest as Request, mockResponse as Response);
 
@@ -85,7 +95,14 @@ describe("Project Controller", () => {
     });
 
     it("should handle duplicate projectId and generate a new one", async () => {
+      const mockUser = {
+        _id: "user123",
+        projects: [],
+        save: jest.fn().mockResolvedValue(true),
+      };
+
       const mockProject = {
+        _id: "project123",
         projectId: "JP000002",
         name: "Test Project",
         description: "Test Description",
@@ -99,6 +116,7 @@ describe("Project Controller", () => {
         name: "Test Project",
         description: "Test Description",
       };
+      mockRequest.userId = "user123";
 
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
@@ -109,6 +127,7 @@ describe("Project Controller", () => {
         { projectId: "JP000001" },
       ]);
       (Project as unknown as jest.Mock).mockImplementation(() => mockProject);
+      (User.findById as jest.Mock).mockResolvedValue(mockUser);
 
       // First check finds a duplicate, second check doesn't
       (Project.findOne as jest.Mock)
@@ -139,6 +158,44 @@ describe("Project Controller", () => {
       expect(responseObject.json).toHaveBeenCalledWith({
         message: "Something went wrong",
       });
+    });
+
+    it("should add creator to project users and project to user projects", async () => {
+      const mockUser = {
+        _id: "user123",
+        projects: [],
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      const mockProject = {
+        _id: "project123",
+        projectId: "JP000001",
+        name: "Test Project",
+        description: "Test Description",
+        users: [],
+        issues: [],
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      mockRequest.body = {
+        name: "Test Project",
+        description: "Test Description",
+      };
+      mockRequest.userId = "user123";
+
+      (validationResult as unknown as jest.Mock).mockReturnValue({
+        isEmpty: () => true,
+      });
+      (Project.find as jest.Mock).mockResolvedValue([]);
+      (Project as unknown as jest.Mock).mockImplementation(() => mockProject);
+      (User.findById as jest.Mock).mockResolvedValue(mockUser);
+
+      await createProject(mockRequest as Request, mockResponse as Response);
+
+      expect(mockProject.users).toContain("user123");
+      expect(mockUser.projects).toContain("project123");
+      expect(mockUser.save).toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
     });
   });
 
@@ -247,7 +304,6 @@ describe("Project Controller", () => {
       expect(Project.findOne).toHaveBeenCalledWith({ projectId: "JP000001" });
       expect(mockProject.name).toBe("New Name");
       expect(mockProject.description).toBe("New Description");
-      expect(mockProject.lastUpdated).not.toEqual(new Date("2023-01-01"));
       expect(mockProject.save).toHaveBeenCalled();
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(responseObject.json).toHaveBeenCalledWith(mockProject);

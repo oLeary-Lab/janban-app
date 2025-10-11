@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 
 import Project from "../models/project";
+import User from "../models/user";
 import { validationResult } from "express-validator";
 
 // "/api/projects/create-project"
@@ -25,8 +26,19 @@ export const createProject = async (req: Request, res: Response) => {
     } while (isInDb);
 
     project.issues = [];
+    // Add creator to project's users array
+    project.users = [req.userId as any];
 
     await project.save();
+
+    // Add project to user's projects
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.projects.push(project._id);
+    await user.save();
 
     return res.status(201).json(project);
   } catch (err) {
@@ -77,7 +89,6 @@ export const updateProject = async (req: Request, res: Response) => {
 
     existingProject.name = name;
     existingProject.description = description;
-    existingProject.lastUpdated = new Date();
 
     await existingProject.save();
 
