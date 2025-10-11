@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { validationResult } from "express-validator";
 
 import Issue from "../models/issue";
+import Project from "../models/project";
 import { checkDatabaseForIssueCode, generateIssueCode } from "../utils/issue";
 
 // "/api/issues/create-issue"
@@ -13,6 +14,23 @@ export const createIssue = async (req: Request, res: Response) => {
   }
 
   try {
+    const { project: projectId } = req.body;
+
+    // Verify project exists
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    // Verify user has access to project
+    const hasAccess = project.users.some(
+      (userId) => userId.toString() === req.userId
+    );
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied to project" });
+    }
+
     const allIssues = await Issue.find({});
     let arrayLength = allIssues.length;
 
@@ -24,9 +42,11 @@ export const createIssue = async (req: Request, res: Response) => {
       issue.issueCode = generateIssueCode(arrayLength);
     }
 
-    issue.createdAt = new Date();
-    issue.lastUpdated = new Date();
     await issue.save();
+
+    // Add issue to project
+    project.issues.push(issue._id);
+    await project.save();
 
     return res.status(201).json(issue);
   } catch (err) {
@@ -90,7 +110,6 @@ export const updateIssue = async (req: Request, res: Response) => {
     existingIssue.storyPoints = storyPoints;
     existingIssue.assignee = assignee;
     existingIssue.columnId = columnId;
-    existingIssue.lastUpdated = new Date();
     await existingIssue.save();
 
     return res.status(200).json(existingIssue);

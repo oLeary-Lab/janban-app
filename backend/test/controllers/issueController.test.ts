@@ -9,6 +9,7 @@ import {
   deleteIssue,
 } from "../../src/controllers/issueController";
 import Issue from "../../src/models/issue";
+import Project from "../../src/models/project";
 import * as issueUtils from "../../src/utils/issue";
 
 // ==== DEPENDENCY MOCKS ====
@@ -55,8 +56,16 @@ describe("Issue Controller", () => {
     });
 
     it("should create an issue and return 201 with issue data", async () => {
+      const mockProject = {
+        _id: "project123",
+        users: ["user123"],
+        issues: [],
+        save: jest.fn().mockResolvedValue(true),
+      };
+
       const newIssue = {
         _id: "issue123",
+        project: "project123",
         issueCategory: "Story",
         isBacklog: false,
         issueCode: "JI000001",
@@ -71,6 +80,7 @@ describe("Issue Controller", () => {
       };
 
       mockRequest.body = {
+        project: "project123",
         issueCategory: "Story",
         isBacklog: false,
         name: "Test Issue",
@@ -79,10 +89,12 @@ describe("Issue Controller", () => {
         assignee: "User123",
         columnId: "playReady",
       };
+      mockRequest.userId = "user123";
 
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
       });
+      (Project.findById as jest.Mock).mockResolvedValue(mockProject);
       (Issue.find as jest.Mock).mockResolvedValue([]);
       (Issue as unknown as jest.Mock).mockImplementation(() => newIssue);
 
@@ -99,8 +111,16 @@ describe("Issue Controller", () => {
     });
 
     it("should regenerate issueCode if duplicate is found", async () => {
+      const mockProject = {
+        _id: "project123",
+        users: ["user123"],
+        issues: [],
+        save: jest.fn().mockResolvedValue(true),
+      };
+
       const newIssue = {
         _id: "issue123",
+        project: "project123",
         issueCategory: "Story",
         isBacklog: false,
         issueCode: "JI000002",
@@ -115,6 +135,7 @@ describe("Issue Controller", () => {
       };
 
       mockRequest.body = {
+        project: "project123",
         issueCategory: "Story",
         isBacklog: false,
         name: "Test Issue",
@@ -123,10 +144,12 @@ describe("Issue Controller", () => {
         assignee: "User123",
         columnId: "playReady",
       };
+      mockRequest.userId = "user123";
 
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
       });
+      (Project.findById as jest.Mock).mockResolvedValue(mockProject);
       (Issue.find as jest.Mock).mockResolvedValue([]);
       (Issue as unknown as jest.Mock).mockImplementation(() => newIssue);
 
@@ -146,8 +169,98 @@ describe("Issue Controller", () => {
       expect(issueUtils.checkDatabaseForIssueCode).toHaveBeenCalledTimes(2);
     });
 
+    it("should verify project exists and user has access before creating issue", async () => {
+      const mockProject = {
+        _id: "project123",
+        projectId: "JP000001",
+        users: ["user123"],
+        issues: [],
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      const newIssue = {
+        _id: "issue123",
+        project: "project123",
+        issueCategory: "Story",
+        isBacklog: false,
+        issueCode: "JI000001",
+        name: "Test Issue",
+        description: "Test description",
+        storyPoints: 3,
+        assignee: "User123",
+        columnId: "playReady",
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      mockRequest.body = {
+        project: "project123",
+        issueCategory: "Story",
+        isBacklog: false,
+        name: "Test Issue",
+        description: "Test description",
+        storyPoints: 3,
+        assignee: "User123",
+        columnId: "playReady",
+      };
+      mockRequest.userId = "user123";
+
+      (validationResult as unknown as jest.Mock).mockReturnValue({
+        isEmpty: () => true,
+      });
+      (Project.findById as jest.Mock).mockResolvedValue(mockProject);
+      (Issue.find as jest.Mock).mockResolvedValue([]);
+      (Issue as unknown as jest.Mock).mockImplementation(() => newIssue);
+      jest.spyOn(issueUtils, "checkDatabaseForIssueCode").mockResolvedValue(false);
+
+      await createIssue(mockRequest as Request, mockResponse as Response);
+
+      expect(Project.findById).toHaveBeenCalledWith("project123");
+      expect(mockProject.issues).toContain("issue123");
+      expect(mockProject.save).toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should return 404 if project does not exist", async () => {
+      mockRequest.body = { project: "invalidProject" };
+
+      (validationResult as unknown as jest.Mock).mockReturnValue({
+        isEmpty: () => true,
+      });
+      (Project.findById as jest.Mock).mockResolvedValue(null);
+
+      await createIssue(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(responseObject.json).toHaveBeenCalledWith({
+        message: "Project not found",
+      });
+    });
+
+    it("should return 403 if user does not have access to project", async () => {
+      const mockProject = {
+        _id: "project123",
+        users: ["otherUser456"],
+      };
+
+      mockRequest.body = { project: "project123" };
+      mockRequest.userId = "user123";
+
+      (validationResult as unknown as jest.Mock).mockReturnValue({
+        isEmpty: () => true,
+      });
+      (Project.findById as jest.Mock).mockResolvedValue(mockProject);
+
+      await createIssue(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+      expect(responseObject.json).toHaveBeenCalledWith({
+        message: "Access denied to project",
+      });
+    });
+
     it("should return 500 if an error occurs", async () => {
       mockRequest.body = {
+        project: "project123",
         issueCategory: "Story",
         isBacklog: false,
         name: "Test Issue",
@@ -160,7 +273,7 @@ describe("Issue Controller", () => {
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
       });
-      (Issue.find as jest.Mock).mockRejectedValue(new Error("Database error"));
+      (Project.findById as jest.Mock).mockRejectedValue(new Error("Database error"));
       jest.spyOn(console, "log").mockImplementation(() => {});
 
       await createIssue(mockRequest as Request, mockResponse as Response);
