@@ -7,6 +7,7 @@ import {
   getIssue,
   updateIssue,
   deleteIssue,
+  getIssuesByProject,
 } from "../../src/controllers/issueController";
 import Issue from "../../src/models/issue";
 import Project from "../../src/models/project";
@@ -496,6 +497,83 @@ describe("Issue Controller", () => {
       jest.spyOn(console, "log").mockImplementation(() => {});
 
       await deleteIssue(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(responseObject.json).toHaveBeenCalledWith({
+        message: "Something went wrong",
+      });
+    });
+  });
+
+  describe("getIssuesByProject", () => {
+    it("should return issues for a project if user has access", async () => {
+      const mockProject = {
+        _id: "project123",
+        projectId: "JP000001",
+        users: ["user123"],
+      };
+
+      const mockIssues = [
+        { issueCode: "JI000001", project: "project123", name: "Issue 1" },
+        { issueCode: "JI000002", project: "project123", name: "Issue 2" },
+      ];
+
+      mockRequest.params = { projectId: "JP000001" };
+      mockRequest.userId = "user123";
+
+      (Project.findOne as jest.Mock).mockResolvedValue(mockProject);
+      (Issue.find as jest.Mock).mockResolvedValue(mockIssues);
+
+      await getIssuesByProject(mockRequest as Request, mockResponse as Response);
+
+      expect(Project.findOne).toHaveBeenCalledWith({ projectId: "JP000001" });
+      expect(Issue.find).toHaveBeenCalledWith({ project: "project123" });
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(responseObject.json).toHaveBeenCalledWith(mockIssues);
+    });
+
+    it("should return 404 if project not found", async () => {
+      mockRequest.params = { projectId: "JP999999" };
+
+      (Project.findOne as jest.Mock).mockResolvedValue(null);
+
+      await getIssuesByProject(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(responseObject.json).toHaveBeenCalledWith({
+        message: "Project not found",
+      });
+    });
+
+    it("should return 403 if user does not have access to project", async () => {
+      const mockProject = {
+        _id: "project123",
+        projectId: "JP000001",
+        users: ["otherUser456"],
+      };
+
+      mockRequest.params = { projectId: "JP000001" };
+      mockRequest.userId = "user123";
+
+      (Project.findOne as jest.Mock).mockResolvedValue(mockProject);
+
+      await getIssuesByProject(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(403);
+      expect(responseObject.json).toHaveBeenCalledWith({
+        message: "Access denied",
+      });
+    });
+
+    it("should return 500 if an error occurs", async () => {
+      mockRequest.params = { projectId: "JP000001" };
+
+      (Project.findOne as jest.Mock).mockRejectedValue(
+        new Error("Database error")
+      );
+      jest.spyOn(console, "log").mockImplementation(() => {});
+
+      await getIssuesByProject(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(responseObject.json).toHaveBeenCalledWith({

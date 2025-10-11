@@ -6,6 +6,7 @@ import {
   updateProject,
   deleteProject,
 } from "../controllers/projectController";
+import { getIssuesByProject } from "../controllers/issueController";
 import { verifyAccessToken } from "../middleware/auth";
 import { validateProjectCreation } from "../middleware/project";
 
@@ -20,6 +21,7 @@ router.post(
 );
 router.get("/", verifyAccessToken, getAllProjects);
 router.get("/:projectId", verifyAccessToken, getProject);
+router.get("/:projectId/issues", verifyAccessToken, getIssuesByProject);
 router.put("/:projectId", verifyAccessToken, updateProject);
 router.delete("/:projectId", verifyAccessToken, deleteProject);
 

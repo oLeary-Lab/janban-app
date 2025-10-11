@@ -87,15 +87,7 @@ export const getIssue = async (req: Request, res: Response) => {
 export const updateIssue = async (req: Request, res: Response) => {
   try {
     const { issueCode } = req.params;
-    const {
-      issueCategory,
-      isBacklog,
-      name,
-      description,
-      storyPoints,
-      assignee,
-      columnId,
-    } = req.body;
+    const { issueCategory, isBacklog, name, description, storyPoints, assignee, columnId } = req.body;
 
     const existingIssue = await Issue.findOne({ issueCode });
 
@@ -130,6 +122,35 @@ export const deleteIssue = async (req: Request, res: Response) => {
     }
 
     return res.status(200).json({ message: "Issue deleted successfully" });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// "/api/projects/:projectId/issues"
+export const getIssuesByProject = async (req: Request, res: Response) => {
+  try {
+    const { projectId } = req.params;
+
+    // Verify project exists
+    const project = await Project.findOne({ projectId });
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    // Verify user has access
+    const hasAccess = project.users.some(
+      (userId) => userId.toString() === req.userId
+    );
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Fetch issues for this project
+    const issues = await Issue.find({ project: project._id });
+    return res.status(200).json(issues);
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Something went wrong" });
