@@ -45,10 +45,28 @@ Last Updated: 2025-10-11 23:39
 - 97.8% overall backend coverage
 - 100% coverage on issueController and projectController
 
-### 🔄 Next: Frontend Phase 2
+### 🔄 In Progress - Frontend Phase 2 (Tasks 2.1-2.3)
+
+**Task 2.1: Update Issue Type with Project Field** ✅
+- Added project field to Issue type in kanbanTypes.ts
+- Added projectId field to Project type
+
+**Task 2.2: Complete useProject Hooks** ✅
+- Completed useCreateProject with onSuccess, onError, onSettled handlers
+- Added useGetAllProjects hook
+- Added useGetProject hook
+- Added useUpdateProject hook with optimistic updates
+- Added useDeleteProject hook with optimistic updates
+- All hooks follow TanStack Query patterns
+
+**Task 2.3: Update useIssue Hooks for Project Context** ✅
+- Updated getAllIssues API to accept optional projectId
+- Routes to /api/projects/:projectId/issues when projectId provided
+- Updated useGetAllIssues hook to accept optional projectId
+- Uses different query keys for project-specific vs all issues
 
 **Remaining Tasks:**
-- Part 2: Frontend hooks, components, pages, routing
+- Part 2: Components, pages, routing
 - Frontend testing (Vitest + React Testing Library configured)
 
 ---

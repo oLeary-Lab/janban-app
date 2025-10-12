@@ -15,6 +15,7 @@ import type { Issue } from "../types/kanbanTypes";
 
 const ISSUES_QUERY_KEY = "issues";
 const ISSUE_QUERY_KEY = "issue";
+const PROJECT_ISSUES_QUERY_KEY = "project-issues";
 
 export const useCreateIssue = () => {
   const { getToken } = useAuth();
@@ -83,18 +84,20 @@ export const useCreateIssue = () => {
   });
 };
 
-export const useGetAllIssues = () => {
+export const useGetAllIssues = (projectId?: string) => {
   const { getToken } = useAuth();
 
   return useQuery({
-    queryKey: [ISSUES_QUERY_KEY],
+    queryKey: projectId
+      ? [PROJECT_ISSUES_QUERY_KEY, projectId]
+      : [ISSUES_QUERY_KEY],
     queryFn: async () => {
       const accessToken = await getToken();
 
       if (!accessToken) {
         throw new Error("No authentication token available");
       }
-      return getAllIssues(accessToken);
+      return getAllIssues(accessToken, projectId);
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,

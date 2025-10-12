@@ -287,23 +287,38 @@ describe("Issue Controller", () => {
   });
 
   describe("getAllIssues", () => {
-    it("should return all issues with status 200", async () => {
-      const issues = [
-        { _id: "issue1", issueCode: "JI000001" },
-        { _id: "issue2", issueCode: "JI000002" },
+    it("should return only issues from user's projects", async () => {
+      const mockProjects = [
+        { _id: "project123" },
+        { _id: "project456" },
       ];
 
+      const issues = [
+        { _id: "issue1", issueCode: "JI000001", project: "project123" },
+        { _id: "issue2", issueCode: "JI000002", project: "project456" },
+      ];
+
+      mockRequest.userId = "user123";
+
+      (Project.find as jest.Mock).mockReturnValue({
+        select: jest.fn().mockResolvedValue(mockProjects),
+      });
       (Issue.find as jest.Mock).mockResolvedValue(issues);
 
       await getAllIssues(mockRequest as Request, mockResponse as Response);
 
-      expect(Issue.find).toHaveBeenCalledWith({});
+      expect(Project.find).toHaveBeenCalledWith({ users: "user123" });
+      expect(Issue.find).toHaveBeenCalledWith({
+        project: { $in: ["project123", "project456"] },
+      });
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(responseObject.json).toHaveBeenCalledWith(issues);
     });
 
     it("should return 500 if an error occurs", async () => {
-      (Issue.find as jest.Mock).mockRejectedValue(new Error("Database error"));
+      (Project.find as jest.Mock).mockReturnValue({
+        select: jest.fn().mockRejectedValue(new Error("Database error")),
+      });
       jest.spyOn(console, "log").mockImplementation(() => {});
 
       await getAllIssues(mockRequest as Request, mockResponse as Response);

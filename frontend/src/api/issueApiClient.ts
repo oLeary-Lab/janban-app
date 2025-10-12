@@ -22,9 +22,16 @@ export const createIssue = async (
     });
 };
 
-export const getAllIssues = async (accessToken: string): Promise<Issue[]> => {
+export const getAllIssues = async (
+  accessToken: string,
+  projectId?: string
+): Promise<Issue[]> => {
+  const url = projectId
+    ? `/api/projects/${projectId}/issues`
+    : "/api/issues";
+
   return await axiosInstance
-    .get("/api/issues", {
+    .get(url, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

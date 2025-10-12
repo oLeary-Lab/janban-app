@@ -58,7 +58,18 @@ export const createIssue = async (req: Request, res: Response) => {
 // "/api/issues"
 export const getAllIssues = async (req: Request, res: Response) => {
   try {
-    const issues = await Issue.find({});
+    // Get all projects user has access to
+    const userProjects = await Project.find({
+      users: req.userId,
+    }).select("_id");
+
+    const projectIds = userProjects.map((p) => p._id);
+
+    // Only return issues from user's projects
+    const issues = await Issue.find({
+      project: { $in: projectIds },
+    });
+
     return res.status(200).json(issues);
   } catch (err) {
     console.log(err);
