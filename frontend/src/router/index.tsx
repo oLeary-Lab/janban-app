@@ -51,21 +51,22 @@ const router = createBrowserRouter([
             path: "/projects",
             element: <ProjectsPage />,
           },
+          // Project-scoped routes
           {
-            path: "/kanban",
+            path: "/projects/:projectId/kanban",
             element: <KanbanPage type="active-board" />,
             handle: { layoutVariant: "kanban" },
           },
           {
-            path: "/kanban/backlog",
+            path: "/projects/:projectId/backlog",
             element: <KanbanPage type="backlog" />,
           },
           {
-            path: "/issues/create-issue",
+            path: "/projects/:projectId/create-issue",
             element: <CreateIssuePage />,
           },
           {
-            path: "/issues/:issueCode",
+            path: "/projects/:projectId/edit-issue/:issueCode",
             element: <IssueManagementPage />,
           },
         ],
@@ -74,10 +75,6 @@ const router = createBrowserRouter([
       // Redirect pages
       {
         path: "/under-construction",
-        element: <UnderConstructionPage />,
-      },
-      {
-        path: "/projects",
         element: <UnderConstructionPage />,
       },
       {

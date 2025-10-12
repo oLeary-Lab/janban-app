@@ -64,9 +64,31 @@ Last Updated: 2025-10-11 23:39
 - Routes to /api/projects/:projectId/issues when projectId provided
 - Updated useGetAllIssues hook to accept optional projectId
 - Uses different query keys for project-specific vs all issues
+- Added PROJECT_ISSUES_QUERY_KEY constant for consistency
+
+**Backend Security Fix** ✅
+- Fixed getAllIssues to filter by user's accessible projects
+- Prevents unauthorized access to issues
+- Both /api/issues and /api/projects/:projectId/issues now secure
+- All 83 backend tests passing
+
+### 🔄 In Progress - Frontend Phase 3: Routing & Navigation
+
+**Task 3.1: Update Router with Project-Based Routes** ✅
+- Added project-scoped routes: /projects/:projectId/kanban, /backlog, /create-issue, /edit-issue/:issueCode
+- Removed old routes (no backward compatibility needed in development)
+- Removed duplicate /projects route
+- Clean router structure
+
+**Task 3.2: Update Layout Header with Project Context** ✅
+- Added project breadcrumbs to Header component
+- Shows "Projects / [Project Name]" when on project pages
+- Uses useParams and useGetProject for context
+- Breadcrumb links navigate back to projects list
+- Styled to match existing theme (amber/indigo colors)
 
 **Remaining Tasks:**
-- Part 2: Components, pages, routing
+- Part 4: Components and pages (ProjectTable, ProjectsPage, etc.)
 - Frontend testing (Vitest + React Testing Library configured)
 
 ---
