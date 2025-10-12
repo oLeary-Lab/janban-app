@@ -87,9 +87,37 @@ Last Updated: 2025-10-11 23:39
 - Breadcrumb links navigate back to projects list
 - Styled to match existing theme (amber/indigo colors)
 
+### 🔄 In Progress - Frontend Phase 4: Projects List Page
+
+**Task 4.1: Implement ProjectTable Component** ✅
+- Created table to display projects with name, description, issue count, last updated
+- Added "View Board" button for navigation to project kanban
+- Handles empty state with helpful message
+- Installed date-fns for date formatting
+- Added shadcn/ui table component
+
+**Task 4.2: Create CreateProjectForm Component** ✅
+- Built form with name and description fields
+- Uses Zod validation schema
+- Follows shadcn/ui form patterns
+- Handles loading state
+
+**Task 4.3: Create CreateProjectDialog Component** ✅
+- Wraps CreateProjectForm in Dialog modal
+- Handles project creation with useCreateProject hook
+- Shows success/error toasts
+- Navigates to new project kanban board after creation
+
+**Task 4.4: Implement ProjectsPage** ✅
+- Fetches all projects with useGetAllProjects hook
+- Shows loading spinner while fetching
+- Displays ProjectTable with projects
+- Includes CreateProjectDialog button
+- Clean layout with header and description
+
 **Remaining Tasks:**
-- Part 4: Components and pages (ProjectTable, ProjectsPage, etc.)
 - Frontend testing (Vitest + React Testing Library configured)
+- E2E user testing
 
 ---
 
