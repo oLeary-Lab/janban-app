@@ -2,7 +2,10 @@ import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 
 import User from "../models/user";
-import { checkDatabaseForRacfid, generateRacfid } from "../utils/user";
+import {
+  checkDatabaseForJanbanId,
+  generateJanbanId,
+} from "../utils/controllerUtils";
 
 // "/api/user/register"
 export const registerUser = async (req: Request, res: Response) => {
@@ -19,21 +22,19 @@ export const registerUser = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const allUsers = await User.find({});
-    let arrayLength = allUsers.length;
-    let user = allUsers.find((user) => user.email === email);
+    let count = await User.countDocuments();
+    let user = await User.findOne({ email });
 
     if (user) {
       return res.status(200).json(user);
     }
 
     user = new User(req.body);
-    user.racfid = generateRacfid(arrayLength);
 
-    while (await checkDatabaseForRacfid(User, user.racfid)) {
-      arrayLength += 1;
-      user.racfid = generateRacfid(arrayLength);
-    }
+    do {
+      user.racfid = generateJanbanId("J", count);
+      count++;
+    } while (await checkDatabaseForJanbanId(User, "racfid", user.racfid));
 
     await user.save();
     return res.status(201).json(user);

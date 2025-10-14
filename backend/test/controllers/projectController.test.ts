@@ -10,6 +10,7 @@ import {
 } from "../../src/controllers/projectController";
 import Project from "../../src/models/project";
 import User from "../../src/models/user";
+import * as controllerUtils from "../../src/utils/controllerUtils";
 
 // ==== DEPENDENCY MOCKS ====
 
@@ -84,6 +85,9 @@ describe("Project Controller", () => {
       (Project.find as jest.Mock).mockResolvedValue([]);
       (Project as unknown as jest.Mock).mockImplementation(() => mockProject);
       (User.findById as jest.Mock).mockResolvedValue(mockUser);
+      jest
+        .spyOn(controllerUtils, "checkDatabaseForJanbanId")
+        .mockResolvedValue(false);
 
       await createProject(mockRequest as Request, mockResponse as Response);
 
@@ -130,9 +134,10 @@ describe("Project Controller", () => {
       (User.findById as jest.Mock).mockResolvedValue(mockUser);
 
       // First check finds a duplicate, second check doesn't
-      (Project.findOne as jest.Mock)
-        .mockResolvedValueOnce({ projectId: "JP000001" })
-        .mockResolvedValueOnce(null);
+      jest
+        .spyOn(controllerUtils, "checkDatabaseForJanbanId")
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false);
 
       await createProject(mockRequest as Request, mockResponse as Response);
 
@@ -189,6 +194,9 @@ describe("Project Controller", () => {
       (Project.find as jest.Mock).mockResolvedValue([]);
       (Project as unknown as jest.Mock).mockImplementation(() => mockProject);
       (User.findById as jest.Mock).mockResolvedValue(mockUser);
+      jest
+        .spyOn(controllerUtils, "checkDatabaseForJanbanId")
+        .mockResolvedValue(false);
 
       await createProject(mockRequest as Request, mockResponse as Response);
 
@@ -196,6 +204,43 @@ describe("Project Controller", () => {
       expect(mockUser.projects).toContain("project123");
       expect(mockUser.save).toHaveBeenCalled();
       expect(mockResponse.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should return 404 if user not found", async () => {
+      const mockProject = {
+        _id: "project123",
+        projectId: "JP000001",
+        name: "Test Project",
+        description: "Test Description",
+        users: [],
+        issues: [],
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      mockRequest.body = {
+        name: "Test Project",
+        description: "Test Description",
+      };
+      mockRequest.userId = "user123";
+
+      (validationResult as unknown as jest.Mock).mockReturnValue({
+        isEmpty: () => true,
+      });
+      (Project.find as jest.Mock).mockResolvedValue([]);
+      (Project as unknown as jest.Mock).mockImplementation(() => mockProject);
+      (User.findById as jest.Mock).mockResolvedValue(null);
+      jest
+        .spyOn(controllerUtils, "checkDatabaseForJanbanId")
+        .mockResolvedValue(false);
+
+      await createProject(mockRequest as Request, mockResponse as Response);
+
+      expect(mockProject.save).toHaveBeenCalled();
+      expect(User.findById).toHaveBeenCalledWith("user123");
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(responseObject.json).toHaveBeenCalledWith({
+        message: "User not found",
+      });
     });
   });
 
@@ -373,6 +418,35 @@ describe("Project Controller", () => {
       expect(responseObject.json).toHaveBeenCalledWith({
         message: "Project not found",
       });
+    });
+
+    it("should only update name and description, not users array", async () => {
+      const mockProject = {
+        projectId: "JP000001",
+        name: "Old Name",
+        description: "Old Description",
+        users: ["user123"],
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      mockRequest.params = { projectId: "JP000001" };
+      mockRequest.userId = "user123";
+      mockRequest.body = {
+        name: "New Name",
+        description: "New Description",
+        users: [], // Attempt to modify users (should be ignored)
+      };
+
+      (Project.findOne as jest.Mock).mockResolvedValue(mockProject);
+
+      await updateProject(mockRequest as Request, mockResponse as Response);
+
+      expect(mockProject.name).toBe("New Name");
+      expect(mockProject.description).toBe("New Description");
+      // Users array should remain unchanged
+      expect(mockProject.users).toEqual(["user123"]);
+      expect(mockProject.save).toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
     });
 
     it("should return 500 if an error occurs", async () => {

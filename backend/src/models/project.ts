@@ -12,6 +12,9 @@ const ProjectSchema = new mongoose.Schema(
 );
 
 // Middleware to validate at least one user
+// NOTE: This is a safety net. The projectController does not expose
+// user array updates through the API. This middleware protects against
+// direct model manipulation or future controller changes.
 ProjectSchema.pre("save", function (next) {
   if (this.users.length < 1) {
     next(new Error("A project must have at least one user"));

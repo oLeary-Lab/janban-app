@@ -7,7 +7,7 @@ import {
   getUser,
   updateUser,
 } from "../../src/controllers/userController";
-import * as racfidUtils from "../../src/utils/user";
+import * as controllerUtils from "../../src/utils/controllerUtils";
 import User from "../../src/models/user";
 
 // ==== DEPENDENCY MOCKS ====
@@ -90,15 +90,15 @@ describe("User Controller", () => {
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
       });
-      (User.find as jest.Mock).mockResolvedValue([]);
+      (User.countDocuments as jest.Mock).mockResolvedValue(0);
 
       // Mock User.findOne to return null (user not found)
       (User.findOne as jest.Mock).mockResolvedValue(null);
       (User as unknown as jest.Mock).mockImplementation(() => newUser);
 
-      // Simulate checkDatabaseForRacfid to return false
+      // Simulate checkDatabaseForJanbanId to return false
       jest
-        .spyOn(racfidUtils, "checkDatabaseForRacfid")
+        .spyOn(controllerUtils, "checkDatabaseForJanbanId")
         .mockResolvedValue(false);
 
       await registerUser(mockRequest as Request, mockResponse as Response);
@@ -129,7 +129,7 @@ describe("User Controller", () => {
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
       });
-      (User.find as jest.Mock).mockResolvedValue([existingUser]);
+      (User.countDocuments as jest.Mock).mockResolvedValue(1);
 
       // Mock User.findOne to return existingUser
       (User.findOne as jest.Mock).mockResolvedValue(existingUser);
@@ -162,13 +162,13 @@ describe("User Controller", () => {
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
       });
-      (User.find as jest.Mock).mockResolvedValue([]);
+      (User.countDocuments as jest.Mock).mockResolvedValue(0);
       (User.findOne as jest.Mock).mockResolvedValue(null);
       (User as unknown as jest.Mock).mockImplementation(() => newUser);
 
-      // Simulate checkDatabaseForRacfid: first call returns true (duplicate), second returns false (unique)
+      // Simulate checkDatabaseForJanbanId: first call returns true (duplicate), second returns false (unique)
       jest
-        .spyOn(racfidUtils, "checkDatabaseForRacfid")
+        .spyOn(controllerUtils, "checkDatabaseForJanbanId")
         .mockResolvedValueOnce(true)
         .mockResolvedValueOnce(false);
 
@@ -178,8 +178,8 @@ describe("User Controller", () => {
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(responseObject.json).toHaveBeenCalledWith(newUser);
 
-      // The racfid should have been regenerated (checkDatabaseForRacfid called twice)
-      expect(racfidUtils.checkDatabaseForRacfid).toHaveBeenCalledTimes(2);
+      // The racfid should have been regenerated (checkDatabaseForJanbanId called twice)
+      expect(controllerUtils.checkDatabaseForJanbanId).toHaveBeenCalledTimes(2);
     });
 
     it("should return 500 if error occurs", async () => {
@@ -192,7 +192,7 @@ describe("User Controller", () => {
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
       });
-      (User.find as jest.Mock).mockRejectedValue(new Error("Database error"));
+      (User.countDocuments as jest.Mock).mockRejectedValue(new Error("Database error"));
       jest.spyOn(console, "log").mockImplementation(() => {});
 
       await registerUser(mockRequest as Request, mockResponse as Response);

@@ -3,6 +3,10 @@ import { Request, Response } from "express";
 import Project from "../models/project";
 import User from "../models/user";
 import { validationResult } from "express-validator";
+import {
+  checkDatabaseForJanbanId,
+  generateJanbanId,
+} from "../utils/controllerUtils";
 
 // "/api/projects/create-project"
 export const createProject = async (req: Request, res: Response) => {
@@ -15,15 +19,15 @@ export const createProject = async (req: Request, res: Response) => {
   try {
     const allProjects = await Project.find({});
     let count = allProjects.length;
-    let isInDb = false;
 
     const project = new Project(req.body);
 
     do {
-      project.projectId = generateProjectId(count);
-      isInDb = await checkDatabaseForProjectId(project.projectId);
+      project.projectId = generateJanbanId("JP", count);
       count++;
-    } while (isInDb);
+    } while (
+      await checkDatabaseForJanbanId(Project, "projectId", project.projectId)
+    );
 
     project.issues = [];
     // Add creator to project's users array
@@ -143,19 +147,4 @@ export const deleteProject = async (req: Request, res: Response) => {
     console.log(err);
     return res.status(500).json({ message: "Something went wrong" });
   }
-};
-
-const generateProjectId = (count: number) => {
-  if (count === 0) {
-    return "JP000001";
-  }
-
-  const prefix = "JP";
-  const suffix = count.toString().padStart(6, "0");
-  return `${prefix}${suffix}`;
-};
-
-const checkDatabaseForProjectId = async (projectId: string) => {
-  const existingProject = await Project.findOne({ projectId });
-  return !!existingProject;
 };

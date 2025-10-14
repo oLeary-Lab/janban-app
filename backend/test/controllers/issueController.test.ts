@@ -11,7 +11,7 @@ import {
 } from "../../src/controllers/issueController";
 import Issue from "../../src/models/issue";
 import Project from "../../src/models/project";
-import * as issueUtils from "../../src/utils/issue";
+import * as controllerUtils from "../../src/utils/controllerUtils";
 
 // ==== DEPENDENCY MOCKS ====
 
@@ -96,12 +96,13 @@ describe("Issue Controller", () => {
         isEmpty: () => true,
       });
       (Project.findById as jest.Mock).mockResolvedValue(mockProject);
+      (Issue.countDocuments as jest.Mock).mockResolvedValue(0);
       (Issue.find as jest.Mock).mockResolvedValue([]);
       (Issue as unknown as jest.Mock).mockImplementation(() => newIssue);
 
-      // Simulate checkDatabaseForIssueCode to return false
+      // Simulate checkDatabaseForJanbanId to return false
       jest
-        .spyOn(issueUtils, "checkDatabaseForIssueCode")
+        .spyOn(controllerUtils, "checkDatabaseForJanbanId")
         .mockResolvedValue(false);
 
       await createIssue(mockRequest as Request, mockResponse as Response);
@@ -151,12 +152,13 @@ describe("Issue Controller", () => {
         isEmpty: () => true,
       });
       (Project.findById as jest.Mock).mockResolvedValue(mockProject);
+      (Issue.countDocuments as jest.Mock).mockResolvedValue(0);
       (Issue.find as jest.Mock).mockResolvedValue([]);
       (Issue as unknown as jest.Mock).mockImplementation(() => newIssue);
 
       // Simulate checkDatabaseForIssueCode: first call returns true (duplicate), second returns false (unique)
       jest
-        .spyOn(issueUtils, "checkDatabaseForIssueCode")
+        .spyOn(controllerUtils, "checkDatabaseForJanbanId")
         .mockResolvedValueOnce(true)
         .mockResolvedValueOnce(false);
 
@@ -167,7 +169,7 @@ describe("Issue Controller", () => {
       expect(responseObject.json).toHaveBeenCalledWith(newIssue);
 
       // The issueCode should have been regenerated (checkDatabaseForRacfid called twice)
-      expect(issueUtils.checkDatabaseForIssueCode).toHaveBeenCalledTimes(2);
+      expect(controllerUtils.checkDatabaseForJanbanId).toHaveBeenCalledTimes(2);
     });
 
     it("should verify project exists and user has access before creating issue", async () => {
@@ -175,7 +177,7 @@ describe("Issue Controller", () => {
         _id: "project123",
         projectId: "JP000001",
         users: ["user123"],
-        issues: [],
+        issues: ["issue123"],
         save: jest.fn().mockResolvedValue(true),
       };
 
@@ -209,9 +211,12 @@ describe("Issue Controller", () => {
         isEmpty: () => true,
       });
       (Project.findById as jest.Mock).mockResolvedValue(mockProject);
+      (Issue.countDocuments as jest.Mock).mockResolvedValue(0);
       (Issue.find as jest.Mock).mockResolvedValue([]);
       (Issue as unknown as jest.Mock).mockImplementation(() => newIssue);
-      jest.spyOn(issueUtils, "checkDatabaseForIssueCode").mockResolvedValue(false);
+      jest
+        .spyOn(controllerUtils, "checkDatabaseForJanbanId")
+        .mockResolvedValue(false);
 
       await createIssue(mockRequest as Request, mockResponse as Response);
 
@@ -233,7 +238,7 @@ describe("Issue Controller", () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Project not found",
+        message: `Project ${mockRequest.body.project} not found`,
       });
     });
 
@@ -255,7 +260,7 @@ describe("Issue Controller", () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(403);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Access denied to project",
+        message: `Access denied to project ${mockRequest.body.project}`,
       });
     });
 
@@ -274,24 +279,23 @@ describe("Issue Controller", () => {
       (validationResult as unknown as jest.Mock).mockReturnValue({
         isEmpty: () => true,
       });
-      (Project.findById as jest.Mock).mockRejectedValue(new Error("Database error"));
+      (Project.findById as jest.Mock).mockRejectedValue(
+        new Error("Database error")
+      );
       jest.spyOn(console, "log").mockImplementation(() => {});
 
       await createIssue(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Something went wrong",
+        message: "Something went wrong with issue creation",
       });
     });
   });
 
   describe("getAllIssues", () => {
     it("should return only issues from user's projects", async () => {
-      const mockProjects = [
-        { _id: "project123" },
-        { _id: "project456" },
-      ];
+      const mockProjects = [{ _id: "project123" }, { _id: "project456" }];
 
       const issues = [
         { _id: "issue1", issueCode: "JI000001", project: "project123" },
@@ -325,7 +329,7 @@ describe("Issue Controller", () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Something went wrong",
+        message: "Something went wrong with retrieving all issues",
       });
     });
   });
@@ -354,7 +358,7 @@ describe("Issue Controller", () => {
       expect(Issue.findOne).toHaveBeenCalledWith({ issueCode: "nonexistent" });
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Issue not found",
+        message: `Issue ${mockRequest.params.issueCode} not found`,
       });
     });
 
@@ -370,7 +374,7 @@ describe("Issue Controller", () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Something went wrong",
+        message: `Something went wrong with retrieving issue ${mockRequest.params.issueCode}`,
       });
     });
   });
@@ -439,7 +443,7 @@ describe("Issue Controller", () => {
       expect(Issue.findOne).toHaveBeenCalledWith({ issueCode: "nonexistent" });
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Issue not found",
+        message: `Issue ${mockRequest.params.issueCode} not found`,
       });
     });
 
@@ -464,7 +468,7 @@ describe("Issue Controller", () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Something went wrong",
+        message: `Something went wrong with updating issue ${mockRequest.params.issueCode}`,
       });
     });
   });
@@ -483,7 +487,7 @@ describe("Issue Controller", () => {
       });
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Issue deleted successfully",
+        message: "Issue JI000001 deleted successfully",
       });
     });
 
@@ -499,7 +503,7 @@ describe("Issue Controller", () => {
       });
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Issue not found",
+        message: "Issue nonexistent not found",
       });
     });
 
@@ -515,7 +519,7 @@ describe("Issue Controller", () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Something went wrong",
+        message: `Something went wrong with deleting issue ${mockRequest.params.issueCode}`,
       });
     });
   });
@@ -539,7 +543,10 @@ describe("Issue Controller", () => {
       (Project.findOne as jest.Mock).mockResolvedValue(mockProject);
       (Issue.find as jest.Mock).mockResolvedValue(mockIssues);
 
-      await getIssuesByProject(mockRequest as Request, mockResponse as Response);
+      await getIssuesByProject(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(Project.findOne).toHaveBeenCalledWith({ projectId: "JP000001" });
       expect(Issue.find).toHaveBeenCalledWith({ project: "project123" });
@@ -552,11 +559,14 @@ describe("Issue Controller", () => {
 
       (Project.findOne as jest.Mock).mockResolvedValue(null);
 
-      await getIssuesByProject(mockRequest as Request, mockResponse as Response);
+      await getIssuesByProject(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockResponse.status).toHaveBeenCalledWith(404);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Project not found",
+        message: `Project ${mockRequest.params.projectId} not found`,
       });
     });
 
@@ -572,11 +582,14 @@ describe("Issue Controller", () => {
 
       (Project.findOne as jest.Mock).mockResolvedValue(mockProject);
 
-      await getIssuesByProject(mockRequest as Request, mockResponse as Response);
+      await getIssuesByProject(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockResponse.status).toHaveBeenCalledWith(403);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Access denied",
+        message: `Access denied to project ${mockRequest.params.projectId}`,
       });
     });
 
@@ -588,11 +601,14 @@ describe("Issue Controller", () => {
       );
       jest.spyOn(console, "log").mockImplementation(() => {});
 
-      await getIssuesByProject(mockRequest as Request, mockResponse as Response);
+      await getIssuesByProject(
+        mockRequest as Request,
+        mockResponse as Response
+      );
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(responseObject.json).toHaveBeenCalledWith({
-        message: "Something went wrong",
+        message: `Something went wrong with retrieving all issues for project ${mockRequest.params.projectId}`,
       });
     });
   });
