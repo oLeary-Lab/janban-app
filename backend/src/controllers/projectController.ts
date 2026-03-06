@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import Project from "../models/project";
-import User from "../models/user";
+import Issue from "../models/issue";
 import { validationResult } from "express-validator";
 
 // "/api/projects/create-project"
@@ -25,20 +25,10 @@ export const createProject = async (req: Request, res: Response) => {
       count++;
     } while (isInDb);
 
-    project.issues = [];
     // Add creator to project's users array
     project.users = [req.userId as any];
 
     await project.save();
-
-    // Add project to user's projects
-    const user = await User.findById(req.userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    user.projects.push(project._id);
-    await user.save();
 
     return res.status(201).json(project);
   } catch (err) {
@@ -63,7 +53,7 @@ export const getProject = async (req: Request, res: Response) => {
   try {
     const { projectId } = req.params;
 
-    const project = await Project.findOne({ projectId }).populate("issues");
+    const project = await Project.findOne({ projectId });
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
@@ -71,7 +61,7 @@ export const getProject = async (req: Request, res: Response) => {
 
     // Verify user has access
     const hasAccess = project.users.some(
-      (userId) => userId.toString() === req.userId
+      (userId) => userId.toString() === req.userId,
     );
 
     if (!hasAccess) {
@@ -98,7 +88,7 @@ export const updateProject = async (req: Request, res: Response) => {
 
     // Verify user has access
     const hasAccess = existingProject.users.some(
-      (userId) => userId.toString() === req.userId
+      (userId) => userId.toString() === req.userId,
     );
 
     if (!hasAccess) {
@@ -129,16 +119,57 @@ export const deleteProject = async (req: Request, res: Response) => {
 
     // Verify user has access
     const hasAccess = project.users.some(
-      (userId) => userId.toString() === req.userId
+      (userId) => userId.toString() === req.userId,
     );
 
     if (!hasAccess) {
       return res.status(403).json({ message: "Access denied" });
     }
 
+    // Count issues for this project
+    const deletedIssueCount = await Issue.countDocuments({
+      project: project._id,
+    });
+
+    // Delete all issues belonging to this project
+    await Issue.deleteMany({ project: project._id });
+
+    // Delete the project
     await Project.findOneAndDelete({ projectId });
 
-    return res.status(200).json({ message: "Project deleted successfully" });
+    return res.status(200).json({
+      message: "Project deleted successfully",
+      deletedIssueCount,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// "api/projects/:projectId/issue-count"
+export const getProjectIssueCount = async (req: Request, res: Response) => {
+  try {
+    const { projectId } = req.params;
+
+    const project = await Project.findOne({ projectId });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    // Verify user has access
+    const hasAccess = project.users.some(
+      (userId) => userId.toString() === req.userId,
+    );
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const issueCount = await Issue.countDocuments({ project: project._id });
+
+    return res.status(200).json({ issueCount });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Something went wrong" });

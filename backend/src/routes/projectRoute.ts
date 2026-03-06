@@ -5,6 +5,7 @@ import {
   getProject,
   updateProject,
   deleteProject,
+  getProjectIssueCount,
 } from "../controllers/projectController";
 import { getIssuesByProject } from "../controllers/issueController";
 import { verifyAccessToken } from "../middleware/auth";
@@ -17,11 +18,12 @@ router.post(
   "/create-project",
   verifyAccessToken,
   validateProjectCreation,
-  createProject
+  createProject,
 );
 router.get("/", verifyAccessToken, getAllProjects);
 router.get("/:projectId", verifyAccessToken, getProject);
 router.get("/:projectId/issues", verifyAccessToken, getIssuesByProject);
+router.get("/:projectId/issue-count", verifyAccessToken, getProjectIssueCount);
 router.put("/:projectId", verifyAccessToken, updateProject);
 router.delete("/:projectId", verifyAccessToken, deleteProject);
 

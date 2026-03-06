@@ -6,9 +6,8 @@ const ProjectSchema = new mongoose.Schema(
     projectId: { type: String, required: true, unique: true },
     description: { type: String, required: true },
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    issues: [{ type: mongoose.Schema.Types.ObjectId, ref: "Issue" }],
   },
-  { timestamps: { createdAt: "createdAt", updatedAt: "lastUpdated" } }
+  { timestamps: { createdAt: "createdAt", updatedAt: "lastUpdated" } },
 );
 
 // Middleware to validate at least one user

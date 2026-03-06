@@ -1,11 +1,11 @@
 import { axiosInstance } from "./axiosConfig";
 
 import type { Issue } from "@/types/kanbanTypes";
-import type { Project } from "@/types/projectTypes";
-
-type DeleteProjectResponse = {
-  message: string;
-};
+import type {
+  Project,
+  DeleteProjectResponse,
+  ProjectIssueCountResponse,
+} from "@/types/projectTypes";
 
 export const createProject = async (
   formData: Partial<Project>,
@@ -102,5 +102,21 @@ export const getIssuesByProject = async (
     .then((response) => response.data)
     .catch(() => {
       throw new Error("Error with fetching project issues");
+    });
+};
+
+export const getProjectIssueCount = async (
+  projectId: string,
+  accessToken: string,
+): Promise<ProjectIssueCountResponse> => {
+  return await axiosInstance
+    .get(`/api/projects/${projectId}/issue-count`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+    .then((response) => response.data)
+    .catch(() => {
+      throw new Error("Error with fetching project issue count");
     });
 };

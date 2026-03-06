@@ -7,9 +7,8 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     passwordEnabled: { type: Boolean, required: true },
-    projects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Project" }],
   },
-  { timestamps: { createdAt: "createdAt", updatedAt: "lastUpdated" } }
+  { timestamps: { createdAt: "createdAt", updatedAt: "lastUpdated" } },
 );
 
 const User = mongoose.model("User", UserSchema);

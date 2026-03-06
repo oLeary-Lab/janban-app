@@ -11,3 +11,12 @@ export type Project = {
   createdAt: string;
   lastUpdated: string;
 };
+
+export type DeleteProjectResponse = {
+  message: string;
+  deletedIssueCount: number;
+};
+
+export type ProjectIssueCountResponse = {
+  issueCount: number;
+};

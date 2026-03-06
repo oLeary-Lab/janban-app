@@ -24,7 +24,7 @@ export const createIssue = async (req: Request, res: Response) => {
 
     // Verify user has access to project
     const hasAccess = project.users.some(
-      (userId) => userId.toString() === req.userId
+      (userId) => userId.toString() === req.userId,
     );
 
     if (!hasAccess) {
@@ -43,10 +43,6 @@ export const createIssue = async (req: Request, res: Response) => {
     }
 
     await issue.save();
-
-    // Add issue to project
-    project.issues.push(issue._id);
-    await project.save();
 
     return res.status(201).json(issue);
   } catch (err) {
@@ -98,7 +94,15 @@ export const getIssue = async (req: Request, res: Response) => {
 export const updateIssue = async (req: Request, res: Response) => {
   try {
     const { issueCode } = req.params;
-    const { issueCategory, isBacklog, name, description, storyPoints, assignee, columnId } = req.body;
+    const {
+      issueCategory,
+      isBacklog,
+      name,
+      description,
+      storyPoints,
+      assignee,
+      columnId,
+    } = req.body;
 
     const existingIssue = await Issue.findOne({ issueCode });
 
@@ -152,7 +156,7 @@ export const getIssuesByProject = async (req: Request, res: Response) => {
 
     // Verify user has access
     const hasAccess = project.users.some(
-      (userId) => userId.toString() === req.userId
+      (userId) => userId.toString() === req.userId,
     );
 
     if (!hasAccess) {
