@@ -8,12 +8,14 @@ import type { Column, Issue } from "@/types/kanbanTypes";
 
 type Props = {
   column: Column;
+  projectId: string;
   issues?: Issue[];
   handleDeleteIssue: (issue: Issue) => void;
 };
 
 const KanbanColumnContainer = ({
   column,
+  projectId,
   issues,
   handleDeleteIssue,
 }: Props) => {
@@ -51,6 +53,7 @@ const KanbanColumnContainer = ({
             <IssueCard
               key={issue.issueCode}
               issue={issue}
+              projectId={projectId}
               handleDeleteIssue={handleDeleteIssue}
             />
           ))}

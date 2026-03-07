@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import IssueManagementForm from "@/components/forms/IssueManagementForm";
@@ -9,23 +9,45 @@ import type { Issue } from "@/types/kanbanTypes";
 
 const IssueManagementPage = () => {
   const navigate = useNavigate();
+  const { projectId, issueCode } = useParams();
   const { data: currentIssue, isLoading: isGetLoading } = useGetIssue();
   const { mutateAsync: updateIssue, isPending: isUpdateLoading } =
     useUpdateIssueByFormData();
 
-  const handleSave = (
+  const handleSave = async (
     formData: Omit<Issue, "_id" | "createdAt" | "lastUpdated">,
   ) => {
     try {
-      updateIssue(formData).then(() => {
-        toast.success("Issue successfully updated");
-        navigate("/kanban");
-      });
+      await updateIssue(formData);
+      toast.success("Issue successfully updated");
+      if (projectId) {
+        navigate(`/projects/${projectId}/kanban`);
+      } else {
+        navigate("/projects");
+      }
     } catch (err) {
       console.log("Error updating issue:", err);
       toast.error("Error updating issue. Please try again");
     }
   };
+
+  const handleCancel = () => {
+    if (projectId) {
+      navigate(`/projects/${projectId}/kanban`);
+    } else {
+      navigate("/projects");
+    }
+  };
+
+  if (!projectId) {
+    return (
+      <div className="container mx-auto py-8">
+        <p>
+          No project selected. Please select a project from the Projects page.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto my-5 w-full rounded-lg border border-amber-300 bg-indigo-100 p-10 sm:max-w-[90%]">
@@ -36,7 +58,9 @@ const IssueManagementPage = () => {
       ) : (
         <IssueManagementForm
           currentIssue={currentIssue}
+          projectId={projectId}
           onSave={handleSave}
+          onCancel={handleCancel}
           isLoading={isUpdateLoading}
         />
       )}

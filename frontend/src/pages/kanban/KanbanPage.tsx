@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import {
@@ -6,7 +6,7 @@ import {
   useGetAllIssues,
   useUpdateIssue,
 } from "@/hooks/useIssue";
-import { useIssuesContext } from "@/contexts/IssuesContext";
+import { useGetProject } from "@/hooks/useProject";
 import KanbanBoard from "@/components/kanban/KanbanBoard";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 
@@ -17,34 +17,16 @@ type Props = {
 };
 
 const KanbanPage = ({ type }: Props) => {
-  const { data: allIssues, isLoading: isGetLoading } = useGetAllIssues();
+  const { projectId } = useParams();
+  const { data: project } = useGetProject(projectId || "");
+  const { data: issues, isLoading: isGetLoading } = useGetAllIssues(projectId);
   const { mutateAsync: updateIssue } = useUpdateIssue();
   const { mutateAsync: deleteIssue } = useDeleteIssue();
-  const { issues, setIssues } = useIssuesContext();
-
-  useEffect(() => {
-    if (allIssues) {
-      try {
-        setIssues(allIssues);
-      } catch (err) {
-        console.log(err);
-        toast.error("Error fetching issues. Please refresh page");
-      }
-    }
-  }, [allIssues, setIssues]);
 
   const handleUpdateIssue = async (issueWithUpdatedData: Issue) => {
     try {
-      setIssues((prevIssues) =>
-        prevIssues?.map((issue) => {
-          if (issue.issueCode === issueWithUpdatedData.issueCode) {
-            return issueWithUpdatedData;
-          }
-          return issue;
-        }),
-      );
-
       await updateIssue(issueWithUpdatedData);
+      toast.success("Issue updated");
     } catch (err) {
       console.log(err);
       toast.error("Error updating issue. Please try again");
@@ -53,10 +35,6 @@ const KanbanPage = ({ type }: Props) => {
 
   const handleDeleteIssue = async (issueToDelete: Issue) => {
     try {
-      setIssues(
-        issues?.filter((issue) => issue.issueCode !== issueToDelete.issueCode),
-      );
-
       await deleteIssue(issueToDelete);
       toast.success("Issue deleted");
     } catch (err) {
@@ -65,14 +43,25 @@ const KanbanPage = ({ type }: Props) => {
     }
   };
 
+  if (!projectId) {
+    return (
+      <div className="container mx-auto py-8">
+        <p>
+          No project selected. Please select a project from the Projects page.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
-      <h1>{"Project: Kanban"}</h1>
+      <h1>{project ? `${project.name}: Kanban` : "Loading..."}</h1>
       {isGetLoading ? (
         <LoadingSpinner />
       ) : (
         <KanbanBoard
           type={type}
+          projectId={projectId}
           issues={issues}
           handleUpdateIssue={handleUpdateIssue}
           handleDeleteIssue={handleDeleteIssue}

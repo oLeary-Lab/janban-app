@@ -7,12 +7,14 @@ import IssueCard from "@/components/kanban/IssueCard";
 
 type Props = {
   columnTitle: "Active Board" | "Backlog";
+  projectId: string;
   issues?: Issue[];
   handleDeleteIssue: (issue: Issue) => void;
 };
 
 const BacklogContainer = ({
   columnTitle,
+  projectId,
   issues,
   handleDeleteIssue,
 }: Props) => {
@@ -50,6 +52,7 @@ const BacklogContainer = ({
             <IssueCard
               key={issue.issueCode}
               issue={issue}
+              projectId={projectId}
               handleDeleteIssue={handleDeleteIssue}
             />
           ))}

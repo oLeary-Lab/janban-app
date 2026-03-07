@@ -2,7 +2,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { useGetAllUsers } from "@/hooks/useUser";
@@ -35,7 +34,9 @@ import type { User } from "@/types/userTypes";
 
 type Props = {
   currentIssue?: Issue;
+  projectId?: string;
   onSave: (formData: Omit<Issue, "_id" | "createdAt" | "lastUpdated">) => void;
+  onCancel: () => void;
   isLoading: boolean;
 };
 
@@ -55,10 +56,11 @@ const formSchema = z.object({
 
 const IssueManagementForm = ({
   currentIssue,
+  projectId,
   onSave,
+  onCancel,
   isLoading: isLoading,
 }: Props) => {
-  const navigate = useNavigate();
   const { data: users } = useGetAllUsers();
   const { mutateAsync: deleteIssue, isPending: isDeleteLoading } =
     useDeleteIssue();
@@ -79,7 +81,9 @@ const IssueManagementForm = ({
 
   const handleDeleteIssue = (issueToDelete: Issue) => {
     deleteIssue(issueToDelete).then(() => {
-      navigate("/kanban");
+      if (projectId) {
+        onCancel();
+      }
       toast.success("Issue deleted");
     });
   };
@@ -297,7 +301,7 @@ const IssueManagementForm = ({
             {isLoading ? "Saving..." : "Submit"}
           </Button>
           <Button
-            onClick={() => navigate("/kanban")}
+            onClick={onCancel}
             disabled={isLoading}
             className="my-2 w-full rounded-lg bg-amber-300 font-bold text-black hover:bg-amber-400 md:w-fit"
           >

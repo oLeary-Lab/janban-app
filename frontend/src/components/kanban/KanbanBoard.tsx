@@ -22,6 +22,7 @@ import type { Issue } from "@/types/kanbanTypes";
 
 type Props = {
   type: "active-board" | "backlog";
+  projectId: string;
   issues?: Issue[];
   handleUpdateIssue: (issueWithUpdatedData: Issue) => void;
   handleDeleteIssue: (issueToDelete: Issue) => void;
@@ -29,6 +30,7 @@ type Props = {
 
 const KanbanBoard = ({
   type,
+  projectId,
   issues,
   handleUpdateIssue,
   handleDeleteIssue,
@@ -101,7 +103,7 @@ const KanbanBoard = ({
         onDragEnd={handleDragEnd}
       >
         <Button className="w-4/5 rounded-lg bg-amber-300 px-4 font-bold text-black hover:bg-amber-400 lg:ml-6 lg:w-fit">
-          <Link to="/issues/create-issue">Add Issue</Link>
+          <Link to={`/projects/${projectId}/create-issue`}>Add Issue</Link>
         </Button>
         {type == "active-board" ? (
           <div className="grid w-full grid-cols-1 px-1 md:grid-cols-2 lg:grid-cols-7">
@@ -109,6 +111,7 @@ const KanbanBoard = ({
               <KanbanColumnContainer
                 key={column.columnId}
                 column={column}
+                projectId={projectId}
                 issues={issues?.filter(
                   (issue) =>
                     issue.columnId === column.columnId && !issue.isBacklog,
@@ -121,11 +124,13 @@ const KanbanBoard = ({
           <div className="flex w-full flex-col items-center justify-between px-1 md:flex-row">
             <BacklogContainer
               columnTitle="Backlog"
+              projectId={projectId}
               issues={issues?.filter((issue) => issue.isBacklog)}
               handleDeleteIssue={handleDeleteIssue}
             />
             <BacklogContainer
               columnTitle="Active Board"
+              projectId={projectId}
               issues={issues?.filter((issue) => !issue.isBacklog)}
               handleDeleteIssue={handleDeleteIssue}
             />

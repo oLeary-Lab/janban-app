@@ -11,10 +11,11 @@ import type { Issue } from "@/types/kanbanTypes";
 
 type Props = {
   issue: Issue;
+  projectId: string;
   handleDeleteIssue: (issue: Issue) => void;
 };
 
-const IssueCard = ({ issue, handleDeleteIssue }: Props) => {
+const IssueCard = ({ issue, projectId, handleDeleteIssue }: Props) => {
   const [mouseIsOver, setMouseIsOver] = useState<boolean>(false);
 
   const {
@@ -49,7 +50,7 @@ const IssueCard = ({ issue, handleDeleteIssue }: Props) => {
       {...listeners}
       className={`flex min-h-24 cursor-grab flex-col items-start rounded-xl bg-indigo-800 p-2.5 text-left text-xs text-white hover:ring-2 hover:ring-inset hover:ring-amber-100`}
     >
-      <Link to={`/issues/${issue.issueCode}`}>
+      <Link to={`/projects/${projectId}/edit-issue/${issue.issueCode}`}>
         <p className="text-sm font-bold underline hover:text-amber-400">
           {issue.issueCode}
         </p>
