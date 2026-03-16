@@ -9,7 +9,7 @@ import type { Issue } from "@/types/kanbanTypes";
 
 const IssueManagementPage = () => {
   const navigate = useNavigate();
-  const { projectId, issueCode } = useParams();
+  const { projectId } = useParams();
   const { data: currentIssue, isLoading: isGetLoading } = useGetIssue();
   const { mutateAsync: updateIssue, isPending: isUpdateLoading } =
     useUpdateIssueByFormData();
@@ -50,9 +50,13 @@ const IssueManagementPage = () => {
   }
 
   return (
-    <div className="mx-auto my-5 w-full rounded-lg border border-amber-300 bg-indigo-100 p-10 sm:max-w-[90%]">
-      <h1 className="mx-2 text-2xl font-bold underline">Manage Issue</h1>
-      <p className="mx-2 text-sm italic">View and Edit an Issue's Details</p>
+    <div className="mx-auto my-5 w-full rounded-lg border-2 border-amber-300 bg-indigo-100 p-10 sm:max-w-[90%]">
+      <h1 className="mb-4 rounded-md bg-indigo-600 px-4 py-2 text-2xl font-bold text-white">
+        Manage Issue
+      </h1>
+      <p className="mx-2 mb-4 text-sm italic">
+        View and Edit an Issue's Details
+      </p>
       {isGetLoading ? (
         <LoadingSpinner />
       ) : (

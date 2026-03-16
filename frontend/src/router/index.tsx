@@ -12,7 +12,7 @@ import IssueManagementPage from "@/pages/kanban/IssueManagementPage";
 import UnderConstructionPage from "@/pages/UnderConstructionPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import AuthRedirectPage from "@/pages/auth/AuthRedirectPage";
-import ProjectsPage from "@/pages/projects/ProjectsPage";
+import ProjectPage from "@/pages/projects/ProjectPage";
 
 const router = createBrowserRouter([
   {
@@ -49,8 +49,9 @@ const router = createBrowserRouter([
           },
           {
             path: "/projects",
-            element: <ProjectsPage />,
+            element: <ProjectPage />,
           },
+
           // Project-scoped routes
           {
             path: "/projects/:projectId/kanban",

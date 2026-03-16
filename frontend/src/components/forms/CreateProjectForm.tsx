@@ -20,7 +20,7 @@ type Props = {
   onSubmit: (
     formData: Omit<
       Project,
-      "_id" | "projectId" | "users" | "issues" | "createdAt" | "lastUpdated"
+      "projectId" | "users" | "issues" | "createdAt" | "lastUpdated"
     >,
   ) => void;
   isLoading: boolean;
@@ -87,7 +87,11 @@ const CreateProjectForm = ({ onSubmit, isLoading }: Props) => {
         />
 
         <div className="flex justify-end gap-2">
-          <Button type="submit" disabled={isLoading}>
+          <Button
+            className="bg-indigo-600 text-white hover:bg-indigo-700"
+            type="submit"
+            disabled={isLoading}
+          >
             {isLoading ? "Creating..." : "Create Project"}
           </Button>
         </div>

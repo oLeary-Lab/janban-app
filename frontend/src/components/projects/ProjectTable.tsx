@@ -25,10 +25,10 @@ const ProjectTable = ({ projects }: Props) => {
   };
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border-2 border-amber-300">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="rounded-t-md border border-b-2 border-amber-300 bg-indigo-600 font-bold text-white">
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Issues</TableHead>
@@ -48,7 +48,7 @@ const ProjectTable = ({ projects }: Props) => {
             </TableRow>
           ) : (
             projects.map((project) => (
-              <TableRow key={project._id}>
+              <TableRow key={project.projectId}>
                 <TableCell className="font-medium">{project.name}</TableCell>
                 <TableCell className="max-w-md truncate">
                   {project.description}
@@ -61,7 +61,7 @@ const ProjectTable = ({ projects }: Props) => {
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
-                    variant="outline"
+                    className="bg-indigo-600 text-white hover:bg-indigo-700"
                     size="sm"
                     onClick={() => handleViewProject(project.projectId)}
                   >

@@ -24,7 +24,7 @@ const CreateProjectDialog = () => {
   const handleSubmit = async (
     formData: Omit<
       Project,
-      "_id" | "projectId" | "users" | "issues" | "createdAt" | "lastUpdated"
+      "projectId" | "users" | "issues" | "createdAt" | "lastUpdated"
     >,
   ) => {
     try {
@@ -48,9 +48,11 @@ const CreateProjectDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Create New Project</Button>
+        <Button className="bg-indigo-600 text-white hover:bg-indigo-700">
+          Create New Project
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="border-amber-300 sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>

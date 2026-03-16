@@ -22,7 +22,7 @@ const CreateIssuePage = () => {
     }
 
     try {
-      const issueWithProject = { ...formData, project: project._id };
+      const issueWithProject = { ...formData, projectId: project.projectId };
       const issue = await createIssue(issueWithProject);
       toast.success(`Issue ${issue.issueCode} created`);
       navigate(`/projects/${projectId}/kanban`);
@@ -43,9 +43,16 @@ const CreateIssuePage = () => {
   }
 
   return (
-    <div className="mx-auto w-full rounded-lg border border-amber-300 bg-indigo-100 p-10">
-      <h1 className="text-3xl font-bold">Create Issue</h1>
-      <IssueManagementForm onSave={handleSave} isLoading={isLoading} />
+    <div className="mx-auto w-full rounded-lg border-2 border-amber-300 bg-indigo-100 p-10">
+      <h1 className="mb-4 rounded-md bg-indigo-600 px-4 py-2 text-2xl font-bold text-white">
+        Create Issue
+      </h1>
+      <IssueManagementForm
+        onSave={handleSave}
+        onCancel={() => navigate(`/projects/${projectId}/kanban`)}
+        projectId={projectId}
+        isLoading={isLoading}
+      />
     </div>
   );
 };

@@ -42,7 +42,7 @@ export const useCreateIssue = () => {
 
       const optimisticIssue: Issue = {
         ...formData,
-        _id: `temp-${Date.now()}`,
+        issueCode: `temp-${Date.now()}`,
         createdAt: new Date(),
         lastUpdated: new Date(),
       };
@@ -52,7 +52,7 @@ export const useCreateIssue = () => {
         optimisticIssue,
       ]);
 
-      return { currentIssues, tempId: optimisticIssue._id };
+      return { currentIssues, tempId: optimisticIssue.issueCode };
     },
 
     onSuccess: (newIssue, _, context) => {
@@ -60,7 +60,7 @@ export const useCreateIssue = () => {
         [ISSUES_QUERY_KEY],
         (old) =>
           old?.map((issue) =>
-            issue._id === context?.tempId ? newIssue : issue,
+            issue.issueCode === context?.tempId ? newIssue : issue,
           ) || [],
       );
 
