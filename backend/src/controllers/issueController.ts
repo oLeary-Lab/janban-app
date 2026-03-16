@@ -14,10 +14,11 @@ export const createIssue = async (req: Request, res: Response) => {
   }
 
   try {
-    const { project: projectId } = req.body;
+    const { projectId } = req.body;
 
     // Verify project exists
-    const project = await Project.findById(projectId);
+    const project = await Project.findOne({ projectId });
+
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
@@ -36,6 +37,7 @@ export const createIssue = async (req: Request, res: Response) => {
 
     const issue = new Issue(req.body);
     issue.issueCode = generateIssueCode(arrayLength);
+    issue.project = project._id;
 
     while (await checkDatabaseForIssueCode(Issue, issue.issueCode)) {
       arrayLength += 1;
@@ -57,13 +59,13 @@ export const getAllIssues = async (req: Request, res: Response) => {
     // Get all projects user has access to
     const userProjects = await Project.find({
       users: req.userId,
-    }).select("_id");
+    });
 
-    const projectIds = userProjects.map((p) => p._id);
+    const projectObjectIds = userProjects.map((project) => project._id);
 
     // Only return issues from user's projects
     const issues = await Issue.find({
-      project: { $in: projectIds },
+      project: { $in: projectObjectIds },
     });
 
     return res.status(200).json(issues);

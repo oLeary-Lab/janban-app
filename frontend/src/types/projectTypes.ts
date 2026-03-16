@@ -2,7 +2,6 @@ import { Issue } from "./kanbanTypes";
 import { User } from "./userTypes";
 
 export type Project = {
-  _id: string;
   projectId: string;
   name: string;
   description: string;

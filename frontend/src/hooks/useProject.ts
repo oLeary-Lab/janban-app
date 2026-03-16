@@ -39,7 +39,7 @@ export const useCreateProject = () => {
 
       const optimisticProject: Project = {
         ...formData,
-        _id: `temp-${Date.now()}`,
+        projectId: `temp-${Date.now()}`,
         createdAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
       };
@@ -49,7 +49,7 @@ export const useCreateProject = () => {
         optimisticProject,
       ]);
 
-      return { currentProjects, tempId: optimisticProject._id };
+      return { currentProjects, tempId: optimisticProject.projectId };
     },
 
     onSuccess: (newProject, _, context) => {
@@ -57,7 +57,7 @@ export const useCreateProject = () => {
         [PROJECTS_QUERY_KEY],
         (old) =>
           old?.map((project) =>
-            project._id === context?.tempId ? newProject : project,
+            project.projectId === context?.tempId ? newProject : project,
           ) || [],
       );
     },

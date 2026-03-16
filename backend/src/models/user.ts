@@ -11,6 +11,15 @@ const UserSchema = new mongoose.Schema(
   { timestamps: { createdAt: "createdAt", updatedAt: "lastUpdated" } },
 );
 
+// Remove Mongoose properties on response to frontend
+UserSchema.set("toJSON", {
+  transform: (_, returned) => {
+    delete returned._id;
+    delete returned.__v;
+    return returned;
+  },
+});
+
 const User = mongoose.model("User", UserSchema);
 
 export default User;

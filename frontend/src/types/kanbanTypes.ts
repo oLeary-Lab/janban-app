@@ -4,7 +4,6 @@ export type Column = {
 };
 
 export type Issue = {
-  _id: string;
   project: string;
   issueCategory: string;
   isBacklog: boolean;

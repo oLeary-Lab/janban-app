@@ -10,7 +10,7 @@ const ProjectSchema = new mongoose.Schema(
   { timestamps: { createdAt: "createdAt", updatedAt: "lastUpdated" } },
 );
 
-// Middleware to validate at least one user
+// Validate at least one user on create
 ProjectSchema.pre("save", function (next) {
   if (this.users.length < 1) {
     next(new Error("A project must have at least one user"));
@@ -19,7 +19,7 @@ ProjectSchema.pre("save", function (next) {
   }
 });
 
-// Also validate on update operations
+// Validate at least one user on update operations
 ProjectSchema.pre("findOneAndUpdate", function (next) {
   const update = this.getUpdate() as any;
 
@@ -29,6 +29,15 @@ ProjectSchema.pre("findOneAndUpdate", function (next) {
   } else {
     next();
   }
+});
+
+// Remove Mongoose properties on response to frontend
+ProjectSchema.set("toJSON", {
+  transform: (_, returned) => {
+    delete returned._id;
+    delete returned.__v;
+    return returned;
+  },
 });
 
 const Project = mongoose.model("Project", ProjectSchema);

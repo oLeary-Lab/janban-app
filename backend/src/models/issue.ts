@@ -27,8 +27,17 @@ const IssueSchema = new mongoose.Schema(
     assignee: { type: String },
     columnId: { type: String, required: true, enum: issueColumnIdEnum },
   },
-  { timestamps: { createdAt: "createdAt", updatedAt: "lastUpdated" } }
+  { timestamps: { createdAt: "createdAt", updatedAt: "lastUpdated" } },
 );
+
+// Remove Mongoose properties on response to frontend
+IssueSchema.set("toJSON", {
+  transform: (_, returned) => {
+    delete returned._id;
+    delete returned.__v;
+    return returned;
+  },
+});
 
 const Issue = mongoose.model("Issue", IssueSchema);
 
