@@ -25,7 +25,7 @@ const ProjectTable = ({ projects }: Props) => {
   };
 
   return (
-    <div className="rounded-md border-2 border-amber-300">
+    <div className="rounded-md">
       <Table>
         <TableHeader>
           <TableRow className="rounded-t-md border border-b-2 border-amber-300 bg-indigo-600 font-bold text-white">
@@ -36,7 +36,7 @@ const ProjectTable = ({ projects }: Props) => {
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="bg">
           {projects.length === 0 ? (
             <TableRow>
               <TableCell

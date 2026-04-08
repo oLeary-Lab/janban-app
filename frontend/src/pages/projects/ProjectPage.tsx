@@ -8,23 +8,22 @@ const ProjectPage = () => {
 
   return (
     <div className="mx-auto my-5 rounded-lg border-2 border-amber-300 bg-indigo-100 p-5">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="mx-2 rounded-md bg-indigo-600 px-4 py-2 text-2xl font-bold text-white">
-            Projects
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            Manage your projects and kanban boards
-          </p>
-        </div>
+      <div className="mb-6 flex flex-col items-center justify-between">
+        <h1 className="mx-2 rounded-md px-4 py-2 text-2xl font-bold underline">
+          Projects
+        </h1>
+        <p className="mx-2 text-sm italic">
+          Manage your projects and kanban boards
+        </p>
+
         <CreateProjectDialog />
       </div>
 
-      {isLoading ? (
+      {/* {isLoading ? (
         <LoadingSpinner />
-      ) : (
-        <ProjectTable projects={projects || []} />
-      )}
+      ) : ( */}
+      <ProjectTable projects={projects || []} />
+      {/* )} */}
     </div>
   );
 };

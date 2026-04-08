@@ -48,7 +48,7 @@ const CreateProjectDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-indigo-600 text-white hover:bg-indigo-700">
+        <Button className="rounded-lg bg-amber-300 font-bold text-black hover:bg-amber-400">
           Create New Project
         </Button>
       </DialogTrigger>

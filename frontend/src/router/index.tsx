@@ -47,30 +47,54 @@ const router = createBrowserRouter([
             path: "/my-profile",
             element: <UserProfilePage />,
           },
-          {
-            path: "/projects",
-            element: <ProjectPage />,
-          },
+          // {
+          //   path: "/projects",
+          //   element: <ProjectPage />,
+          // },
 
-          // Project-scoped routes
-          {
-            path: "/projects/:projectId/kanban",
-            element: <KanbanPage type="active-board" />,
-            handle: { layoutVariant: "kanban" },
-          },
-          {
-            path: "/projects/:projectId/backlog",
-            element: <KanbanPage type="backlog" />,
-          },
-          {
-            path: "/projects/:projectId/create-issue",
-            element: <CreateIssuePage />,
-          },
-          {
-            path: "/projects/:projectId/edit-issue/:issueCode",
-            element: <IssueManagementPage />,
-          },
+          // // Project-scoped routes
+          // {
+          //   path: "/projects/:projectId/kanban",
+          //   element: <KanbanPage type="active-board" />,
+          //   handle: { layoutVariant: "kanban" },
+          // },
+          // {
+          //   path: "/projects/:projectId/backlog",
+          //   element: <KanbanPage type="backlog" />,
+          // },
+          // {
+          //   path: "/projects/:projectId/create-issue",
+          //   element: <CreateIssuePage />,
+          // },
+          // {
+          //   path: "/projects/:projectId/edit-issue/:issueCode",
+          //   element: <IssueManagementPage />,
+          // },
         ],
+      },
+
+      {
+        path: "/projects",
+        element: <ProjectPage />,
+      },
+
+      // Project-scoped routes
+      {
+        path: "/projects/:projectId/kanban",
+        element: <KanbanPage type="active-board" />,
+        handle: { layoutVariant: "kanban" },
+      },
+      {
+        path: "/projects/:projectId/backlog",
+        element: <KanbanPage type="backlog" />,
+      },
+      {
+        path: "/projects/:projectId/create-issue",
+        element: <CreateIssuePage />,
+      },
+      {
+        path: "/projects/:projectId/edit-issue/:issueCode",
+        element: <IssueManagementPage />,
       },
 
       // Redirect pages
