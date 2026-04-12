@@ -1,0 +1,8 @@
+telemetry = false
+
+[install]
+# Minimum release age of 28d
+minimumReleaseAge = 2419200
+
+[install.security]
+scanner = "@bun-security-scanner/osv"
