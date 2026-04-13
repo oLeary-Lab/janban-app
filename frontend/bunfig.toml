@@ -1,4 +1,11 @@
 telemetry = false
 
+[install]
+# Minimum release age of 7d
+minimumReleaseAge = 604800
+# axios 1.15.0 patches critical SSRF CVEs (CVE-2025-62718, CVE-2026-40175)
+# and was published within the 7-day window. Remove once it ages past 7 days.
+minimumReleaseAgeExcludes = ["axios"]
+
 [install.security]
 scanner = "@bun-security-scanner/osv"
